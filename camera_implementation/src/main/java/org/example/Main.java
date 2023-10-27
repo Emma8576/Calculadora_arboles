@@ -133,6 +133,9 @@ public class Main {
         if (!expression.matches("[0-9+\\-*/()%^]+")) {
             return "Expresión inválida";
         }
+        String postfix = infixToPostfix(expression);
+
+
 
         try {
             Expression e = new ExpressionBuilder(expression)
@@ -191,6 +194,7 @@ public class Main {
         return postfix.toString();
     }
 
+
     private static int precedence(char operator) {
         if (operator == '+' || operator == '-') {
             return 1;
@@ -200,6 +204,8 @@ public class Main {
             return 3;
         } else if (operator == '^'){
             return 4;
+        } else if (operator == '(' || operator == ')') {
+            return 0; 
         }
         return 0;
     }
