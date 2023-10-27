@@ -1,6 +1,9 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 class Nodo {
     String valor;
@@ -15,19 +18,24 @@ class Nodo {
 }
 
 public class ArbolOpBasicas {
-    private static final String OPERADORES = "+-*/%^**";
+    private static final String OPERADORES = "+-*/%^";
+    private static final String OPERADORES_LOGICOS = "&|~^";
     private static final String PARENTESIS = "()";
 
-    // Método para construir un árbol de expresión a partir de una lista de tokens
     public Nodo construirArbolExpresion(List<String> tokens) {
         Stack<Nodo> pila = new Stack<>();
         Stack<String> operadores = new Stack<>();
-
+    
         for (String token : tokens) {
             if (esOperando(token)) {
                 pila.push(new Nodo(token));
             } else if (esOperador(token)) {
                 while (!operadores.isEmpty() && tienePrecedenciaMayor(operadores.peek(), token)) {
+                    aplicarOperador(pila, operadores);
+                }
+                operadores.push(token);
+            } else if (esOperadorLogico(token)) {
+                while (!operadores.isEmpty() && esOperadorLogico(operadores.peek()) && tienePrecedenciaMayor(operadores.peek(), token)) {
                     aplicarOperador(pila, operadores);
                 }
                 operadores.push(token);
@@ -38,15 +46,19 @@ public class ArbolOpBasicas {
                     aplicarOperador(pila, operadores);
                 }
                 operadores.pop();
+                if (!operadores.isEmpty() && esOperadorLogico(operadores.peek())) {
+                    aplicarOperador(pila, operadores);
+                }
             }
         }
-
+    
         while (!operadores.isEmpty()) {
             aplicarOperador(pila, operadores);
         }
-
+    
         return pila.pop(); // La raíz del árbol de expresión
     }
+    
 
     // Método para aplicar un operador en la pila de operadores y la pila de nodos
     private void aplicarOperador(Stack<Nodo> pila, Stack<String> operadores) {
@@ -75,14 +87,12 @@ public class ArbolOpBasicas {
             case "%":
                 return 2;
             case "^":
-            case "**":
                 return 3;
             default:
                 return 0;
         }
     }
 
-    // Método para evaluar el árbol de expresión y calcular el resultado
     public double evaluarArbolExpresion(Nodo raiz) {
         if (raiz == null) {
             return 0.0;
@@ -90,6 +100,23 @@ public class ArbolOpBasicas {
         if (esOperando(raiz.valor)) {
             return Double.parseDouble(raiz.valor);
         }
+        if (esOperadorLogico(raiz.valor)) {
+            double valorIzquierdo = evaluarArbolExpresion(raiz.izquierdo);
+            double valorDerecho = evaluarArbolExpresion(raiz.derecho);
+            switch (raiz.valor) {
+                case "&":
+                    return (valorIzquierdo == 1.0 && valorDerecho == 1.0) ? 1.0 : 0.0; // AND lógico
+                case "|":
+                    return (valorIzquierdo == 1.0 || valorDerecho == 1.0) ? 1.0 : 0.0; // OR lógico
+                case "^":
+                    return (valorIzquierdo != valorDerecho) ? 1.0 : 0.0; // XOR lógico
+                case "~":
+                    return (valorIzquierdo == 0.0) ? 1.0 : 0.0; // NOT lógico
+                default:
+                    throw new IllegalArgumentException("Operador lógico no válido: " + raiz.valor);
+            }
+        }
+        // Resto de los operadores aritméticos
         double valorIzquierdo = evaluarArbolExpresion(raiz.izquierdo);
         double valorDerecho = evaluarArbolExpresion(raiz.derecho);
         switch (raiz.valor) {
@@ -107,13 +134,11 @@ public class ArbolOpBasicas {
             case "%":
                 return valorIzquierdo % valorDerecho;
             case "^":
-            case "**":
                 return Math.pow(valorIzquierdo, valorDerecho); // Calcula la potencia
             default:
                 throw new IllegalArgumentException("Operador no válido: " + raiz.valor);
         }
     }
-
     // Método para verificar si un token es un operando (número)
     public boolean esOperando(String token) {
         try {
@@ -122,6 +147,11 @@ public class ArbolOpBasicas {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    // Método para verificar si un token es un operador lógico válido
+    public boolean esOperadorLogico(String token) {
+        return OPERADORES_LOGICOS.contains(token) && token.length() == 1;
     }
 
     // Método para verificar si un token es un operador válido
@@ -140,6 +170,8 @@ public class ArbolOpBasicas {
 
     // Método para tokenizar una expresión matemática en una lista de tokens
     public List<String> tokenizarExpresion(String expresion) {
+        // Reemplazar "**" por "^" en la expresión
+        expresion = expresion.replace("**", "^");
         List<String> tokens = new ArrayList<>();
         StringBuilder token = new StringBuilder();
 
@@ -162,3 +194,4 @@ public class ArbolOpBasicas {
         return tokens;
     }
 }
+
