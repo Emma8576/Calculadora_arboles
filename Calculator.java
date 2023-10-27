@@ -10,33 +10,34 @@ public class Calculator extends JFrame implements ActionListener {
     private JButton exit, next, history, help, camera;
     private JTextArea operation_entry_box;
     private static final String OPERADORES = "+-*/%^**";
+    private static final String OPERADORES_LOGICOS = "&|~^";
     private static final String PARENTESIS = "()";
 
     private ArbolOpBasicas expresionArbol = new ArbolOpBasicas();
 
-    // Método para tokenizar una expresión matemática en una lista de tokens
-    private List<String> tokenizarExpresion(String expresion) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder token = new StringBuilder();
+   // Método para tokenizar una expresión matemática o lógica en una lista de tokens
+private List<String> tokenizarExpresion(String expresion) {
+    List<String> tokens = new ArrayList<>();
+    StringBuilder token = new StringBuilder();
 
-        for (char c : expresion.toCharArray()) {
-            if (Character.isDigit(c) || c == '.') {
-                token.append(c);
-            } else if (OPERADORES.contains(String.valueOf(c)) || PARENTESIS.contains(String.valueOf(c))) {
-                if (token.length() > 0) {
-                    tokens.add(token.toString());
-                    token.setLength(0);
-                }
-                tokens.add(String.valueOf(c));
+    for (char c : expresion.toCharArray()) {
+        if (Character.isDigit(c) || c == '.') {
+            token.append(c);
+        } else if (OPERADORES.contains(String.valueOf(c)) || OPERADORES_LOGICOS.contains(String.valueOf(c)) || PARENTESIS.contains(String.valueOf(c))) {
+            if (token.length() > 0) {
+                tokens.add(token.toString());
+                token.setLength(0);
             }
+            tokens.add(String.valueOf(c));
         }
-
-        if (token.length() > 0) {
-            tokens.add(token.toString());
-        }
-
-        return tokens;
     }
+
+    if (token.length() > 0) {
+        tokens.add(token.toString());
+    }
+
+    return tokens;
+}
 
     public Calculator() {
         Locale.setDefault(new Locale("es", "ES"));
@@ -143,13 +144,24 @@ public class Calculator extends JFrame implements ActionListener {
             List<String> tokens = tokenizarExpresion(operacion);
             // Construir un árbol de expresión a partir de los tokens
             Nodo raiz = expresionArbol.construirArbolExpresion(tokens);
-            // Evaluar el árbol de expresión y obtener el resultado
-            double resultado = expresionArbol.evaluarArbolExpresion(raiz);
+            
+            double resultado;
+            if (esExpresionLogica(operacion)) {
+                resultado = expresionArbol.evaluarArbolExpresion(raiz);
+            } else {
+                resultado = expresionArbol.evaluarArbolExpresion(raiz);
+            }
             
             // Muestra el resultado en un cuadro de texto o etiqueta
             JOptionPane.showMessageDialog(this, "Resultado: " + resultado, "Resultado", JOptionPane.INFORMATION_MESSAGE);
         }
     }
+    
+    private boolean esExpresionLogica(String expresion) {
+        // Implementa lógica para determinar si la expresión es lógica (por ejemplo, busca operadores lógicos como |, &, etc.)
+        return expresion.contains("|") || expresion.contains("&") || expresion.contains("~") || expresion.contains("^");
+    }
+    
 
     public static void main(String args[]) {
         SwingUtilities.invokeLater(new Runnable() {
