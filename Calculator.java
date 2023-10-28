@@ -1,9 +1,15 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Scanner;
 
 public class Calculator extends JFrame implements ActionListener {
     private JLabel operation_entryL, title;
@@ -12,6 +18,9 @@ public class Calculator extends JFrame implements ActionListener {
     private static final String OPERADORES = "+-*/%^**";
     private static final String OPERADORES_LOGICOS = "&|~^";
     private static final String PARENTESIS = "()";
+    private PrintWriter out;
+    private BufferedReader in;
+    private Socket clientSocket;
 
     private ArbolOpBasicas expresionArbol = new ArbolOpBasicas();
 
@@ -39,7 +48,20 @@ private List<String> tokenizarExpresion(String expresion) {
     return tokens;
 }
 
-    public Calculator() {
+    public Calculator() throws Exception{
+        //Configuración de sockets y entrada/salida
+        //final BufferedReader in;  //Se declara la entrada 
+        //final PrintWriter out;    //Se declara la salida
+        final Scanner sc = new Scanner(System.in); // Sirve para obtener la informacón que se encuentra en la terminal la cual fue escrita por el teclado
+        //Captura del nombre de usuario
+        System.out.println("Indique el nombre de usuario con el que se desea ingresar");
+        String username = sc.nextLine();//Obtiene el usuario escrito
+        clientSocket = new Socket("localhost", 3000);
+        out = new PrintWriter(clientSocket.getOutputStream());
+        in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        out.println(username);//Envia el username escrito
+        out.flush();
+
         Locale.setDefault(new Locale("es", "ES"));
         setLayout(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -141,32 +163,42 @@ private List<String> tokenizarExpresion(String expresion) {
             // Obtener la expresión ingresada por el usuario
             String operacion = operation_entry_box.getText();
             // Tokenizar la expresión en una lista de tokens
-            List<String> tokens = tokenizarExpresion(operacion);
-            // Construir un árbol de expresión a partir de los tokens
-            Nodo raiz = expresionArbol.construirArbolExpresion(tokens);
+            out.println(operacion);
+            out.flush();
+            System.out.println(operacion);
             
-            double resultado;
-            if (esExpresionLogica(operacion)) {
-                resultado = expresionArbol.evaluarArbolExpresion(raiz);
-            } else {
-                resultado = expresionArbol.evaluarArbolExpresion(raiz);
-            }
+            //List<String> tokens = tokenizarExpresion(operacion);
+        
+            // Construir un árbol de expresión a partir de los tokens
+            //Nodo raiz = expresionArbol.construirArbolExpresion(tokens);
+            // Evaluar el árbol de expresión y obtener el resultado
+            //double resultado = expresionArbol.evaluarArbolExpresion(raiz);
             
             // Muestra el resultado en un cuadro de texto o etiqueta
-            JOptionPane.showMessageDialog(this, "Resultado: " + resultado, "Resultado", JOptionPane.INFORMATION_MESSAGE);
+
+            try {
+                        String resultado = in.readLine();//Se lee el mensaje recibido
+                        JOptionPane.showMessageDialog(this, "Resultado: " + resultado, "Resultado", JOptionPane.INFORMATION_MESSAGE);
+                        
+                    } catch (IOException E) {
+                        E.printStackTrace();
+                    }
+            //String resultado = in.readLine();//Se lee el mensaje recibido
+            //JOptionPane.showMessageDialog(this, "Resultado: " + resultado, "Resultado", JOptionPane.INFORMATION_MESSAGE);
+            
         }
-    }
-    
-    private boolean esExpresionLogica(String expresion) {
-        // Implementa lógica para determinar si la expresión es lógica (por ejemplo, busca operadores lógicos como |, &, etc.)
-        return expresion.contains("|") || expresion.contains("&") || expresion.contains("~") || expresion.contains("^");
     }
     
 
     public static void main(String args[]) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new Calculator();
+                try {
+                    new Calculator();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         });
     }
