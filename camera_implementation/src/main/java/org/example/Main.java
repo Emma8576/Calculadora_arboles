@@ -34,7 +34,7 @@ public class Main {
         }
 
         ITesseract tesseract = new Tesseract();
-        tesseract.setDatapath("C:\\Users\\User\\Documents\\Descargas\\Tesseract\\tessdata");
+        tesseract.setDatapath("C:\\Program Files\\Tesseract-OCR\\tessdata");
 
         tesseract.setTessVariable("tessedit_char_whitelist", "0123456789+-*/%()^");
         tesseract.setPageSegMode(7);
@@ -82,10 +82,10 @@ public class Main {
                     Imgproc.GaussianBlur(destination, resultMat, new Size(5, 5), 0);
                     Imgproc.threshold(resultMat, resultMat, 0, 255, Imgproc.THRESH_BINARY + Imgproc.THRESH_OTSU);
 
-                    Imgcodecs.imwrite("C:\\Users\\User\\Documents\\math\\imagen_preprocesada.jpg", resultMat);
+                    Imgcodecs.imwrite("C:\\Users\\quiqu\\OneDrive\\Documentos\\GitHub\\Calculadora_arboles\\camera_implementation\\imagen_preprocesada.jpg", resultMat);
 
                     try {
-                        String texto = tesseract.doOCR(new File("C:\\Users\\User\\Documents\\math\\imagen_preprocesada.jpg"));
+                        String texto = tesseract.doOCR(new File("C:\\Users\\quiqu\\OneDrive\\Documentos\\GitHub\\Calculadora_arboles\\camera_implementation\\imagen_preprocesada.jpg"));
                         System.out.println("Texto extraído: " + texto);
 
                         String resultado = evaluateExpression(texto);
@@ -130,7 +130,7 @@ public class Main {
 
     private static String evaluateExpression(String expression) {
         expression = expression.replaceAll("\\s+", "");
-        if (!expression.matches("[0-9+\\-*/()%^]+")) {
+        if (!expression.matches("[0-9+\\-*/()%^&|~]+")) {
             return "Expresión inválida";
         }
         String postfix = infixToPostfix(expression);
@@ -205,7 +205,7 @@ public class Main {
         } else if (operator == '^'){
             return 4;
         } else if (operator == '(' || operator == ')') {
-            return 0; 
+            return 0;
         }
         return 0;
     }
